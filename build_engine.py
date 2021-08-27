@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright 2020 NVIDIA Corporation
+# Copyright 2021 NVIDIA Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -45,7 +45,7 @@ def build_profile(builder, network, profile_shapes, default_shape_value=1):
             shapes = get_profile_shape(inp.name)
             if not shapes:
                 rank = inp.shape[0]
-                shapes = [(default_shape_value, ) * rank] * 3
+                shapes = [(DEFAULT_SHAPE_VALUE, ) * rank] * 3
                 print("Setting shape input to {:}. If this is incorrect, for shape input: {:}, please provide tuples for min, opt, and max shapes containing {:} elements".format(shapes[0], inp.name, rank))
             min, opt, max = shapes
             profile.set_shape_input(inp.name, min, opt, max)
@@ -62,41 +62,6 @@ def build_profile(builder, network, profile_shapes, default_shape_value=1):
         print("Profile is not valid, please provide profile data. Note: profile was: {:}".format(profile_shapes))
     return profile
 
-def preprocess_network(network):
-    """
-    Add quantize and dequantize nodes after the input placeholder.
-    The scale values are currently picked on emperical basis. Ideally,
-    you need to add these nodes during quantization aware training and 
-    learn the dynamic ranges of input node.
-    """
-    quant_scale = np.array([1.0/127.0], dtype=np.float32)
-    dequant_scale = np.array([127.0/1.0], dtype=np.float32)
-    # Zero point is always zero for quantization in TensorRT.
-    zeros = np.zeros(shape=(1, ), dtype=np.float32)
- 
-    for i in range(network.num_inputs):
-        inp = network.get_input(i)
-        # Find layer consuming input tensor
-        found = False
-        for layer in network:
-            if found:
-                break;
-
-            for k in range(layer.num_inputs):
-                if (inp == layer.get_input(k)):
-                    mode = trt.ScaleMode.UNIFORM
-                    quantize = network.add_scale(inp, mode, scale=quant_scale, shift=zeros)
-                    quantize.set_output_type(0, trt.int8)
-                    quantize.name = "InputQuantizeNode"
-                    quantize.get_output(0).name = "QuantizedInput"
-                    dequantize = network.add_scale(quantize.get_output(0), mode, scale=dequant_scale, shift=zeros)
-                    dequantize.set_output_type(0, trt.float32)
-                    dequantize.name = "InputDequantizeNode"
-                    dequantize.get_output(0).name = "DequantizedInput"
-                    layer.set_input(k, dequantize.get_output(0))
-                    found = True
-                    break
-
 def build_engine_onnx(model_file, verbose=False):
     """
     Parse the model file through TensorRT, build TRT engine and run inference
@@ -106,10 +71,10 @@ def build_engine_onnx(model_file, verbose=False):
         TRT_LOGGER = trt.Logger(trt.Logger.VERBOSE)
     else:
         TRT_LOGGER = trt.Logger(trt.Logger.INFO)
-        
+
     network_flags = 1 << int(trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH)
     network_flags = network_flags | (1 << int(trt.NetworkDefinitionCreationFlag.EXPLICIT_PRECISION))
-    
+
     with trt.Builder(TRT_LOGGER) as builder, builder.create_network(flags=network_flags) as network, trt.OnnxParser(network, TRT_LOGGER) as parser:
         with open(model_file, 'rb') as model:
             if not parser.parse(model.read()):
@@ -117,9 +82,7 @@ def build_engine_onnx(model_file, verbose=False):
                 for error in range(parser.num_errors):
                     print (parser.get_error(error))
                 return None
-                
-        # Add quantize and dequantize nodes for input of the network
-        preprocess_network(network)
+
         config = builder.create_builder_config()
         config.max_workspace_size = 1 << 30
         config.flags = config.flags | 1 << int(trt.BuilderFlag.INT8)

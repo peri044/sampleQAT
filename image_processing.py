@@ -103,9 +103,7 @@ def normalize_inputs(inputs):
 
     # We have a 1-D tensor of means; convert to 3-D.
     means_per_channel = np.reshape(_CHANNEL_MEANS, [1, 1, num_channels])
-    # means_per_channel = tf.cast(means_per_channel, dtype=inputs.dtype)
-
-    inputs = np.subtract(inputs, means_per_channel)/255.0
+    inputs = np.subtract(inputs, means_per_channel)
 
     return inputs
 
