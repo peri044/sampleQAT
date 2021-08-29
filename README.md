@@ -24,6 +24,7 @@ This sample demonstrates workflow for training and inference of Resnet-50 model 
 
 ## Pre-requisites
 
+* TensorRT 8.0.1.6, CUDA-11.2, CUDNN 8.2.1
 * Install the necessary requirements
 
 ```
@@ -36,21 +37,54 @@ pip install -r requirements.txt
 
 ```sh
 git clone https://github.com/tensorflow/models.git
-git checkout tag/2.6.0
-cd models
-export PYTHONPATH=$PWD:$PYTHONPATH
+pushd models && git checkout tags/v2.6.0 && popd
+export PYTHONPATH=$PWD/models:$PYTHONPATH
 ```
 
 ## Running the sample
 
+Clone the sample and setup `PYTHONPATH` accordingly.
+
+```sh
+git clone https://github.com/NVIDIA/sampleQAT.git
+cd sampleQAT
+export PYTHONPATH=$PWD:$PYTHONPATH
+```
+
 ### Step 1: Quantization Aware Training
 
-Please follow detailed instructions on how to <a href="https://github.com/NVIDIA/DeepLearningExamples/tree/master/TensorFlow/Classification/ConvNets/resnet50v1.5#quantization-aware-training">finetune a RN50 model using QAT</a>.
+The workflow for this step is
 
-This stage involves
+* Instantiate Resnet 50 model, load the pretrained checkpoint
+* Apply `quantize_model` which transforms the original Resnet50 graph by inserting QDQ nodes.
+* Finetune this model on ImageNet dataset and save the QAT model checkpoints.
 
-* Finetune a RN50 model with quantization nodes and save the final checkpoint.
-* Post process the above RN50 QAT checkpoint by reshaping the weights of final FC layer into a 1x1 conv layer.
+NVIDIA recommends to insert `QuantizeAndDequantize`  (QDQ) nodes before inputs and weights of weighted layers. Please take a look at this <a href="https://developer.nvidia.com/blog/achieving-fp32-accuracy-for-int8-inference-using-quantization-aware-training-with-tensorrt/"> blogpost</a>  for detailed recommendations.
+
+We provide automatic way to insert these QDQ nodes at the inputs of conv/FC, Maxpool layers and weights of conv/FC layers.  Please refer to`quantize.py` , `quantize_wrapper.py` and `quantizers.py`.
+
+For this sample, we use <a href="https://github.com/tensorflow/models/tree/v2.6.0/official/vision/image_classification/resnet">Resnet50 from Tensorflow model garden codebase</a> for training. We use custom training loop implementation of this codebase to finetune our model using quantization nodes.
+
+`resnet_runnable.py` script is responsible for instantiating the model. To apply NVIDIA's recipe of adding QDQ nodes, you need to change this script at
+https://github.com/tensorflow/models/blob/v2.6.0/official/vision/image_classification/resnet/resnet_runnable.py#L64 as follows
+
+```python
+self.model = resnet_model.resnet50(
+        num_classes=imagenet_preprocessing.NUM_CLASSES,
+        batch_size=flags_obj.batch_size,
+        use_l2_regularizer=not flags_obj.single_l2_loss_op)
+
+self.model.load_weights(<path_to_pretrained_ckpt>)
+
+from quantize import quantize_model
+self.model = quantize_model(self.model)
+```
+
+  `quantize_model` walks through the graph, identifies `Conv` and `FC` layers  and inserts QDQ nodes around them. The `min_var` and `max_var` determine the dynamic range of a particular layer which is used to compute the scale factors used for INT8 conversion. This scale factor computation is performed internally in TF2ONNX when the QAT finetuned model is converted to ONNX.
+
+Download <a href="https://github.com/tensorflow/models/tree/v2.6.0/official/vision/image_classification/resnet#pretrained-models">pretrained checkpoint for RN50</a> and set `path_to_pretrained_ckpt` accordingly in the above snippet of `resnet_runnable.py` script.
+
+With these modifications, you can proceed with the finetuning of the model with QAT using the <a href="https://github.com/tensorflow/models/tree/v2.6.0/official/vision/image_classification/resnet#resnet-custom-training-loop">instructions provided </a>.
 
 ### Step 2 : Export a RN50 QAT saved model
 
@@ -60,7 +94,7 @@ Once you've finetuned the QAT model, export it by running
 python export_rn50_qat.py --ckpt <path_to_ckpt> --output <path_to_saved_model>
 ```
 
-This script applies quantization to the model, restores the checkpoint and exports it in a saved_model format. This script will generate `rn50_qdq_step_45k_acc_76.39_regen_new`  which is a directory containing saved model.
+This script applies quantization to the model, restores the checkpoint and exports it in a saved_model format. This script will generate `rn50_qat_saved_model`  which is a directory containing saved model.
 
 Arguments:
 
