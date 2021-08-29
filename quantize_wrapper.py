@@ -91,15 +91,10 @@ class QuantizeWrapper(tf.keras.layers.Wrapper):
         initializer=tf.keras.initializers.Constant(-1),
         dtype=tf.dtypes.int32,
         trainable=False)
-    # import pdb; pdb.set_trace()
+
     self._weight_vars = []
     self.input_vars = {}
-    # quantize_conv_fc_weight = isinstance(self.layer, tf.keras.layers.Conv2D) \
-                              # or isinstance(self.layer, tf.keras.layers.Dense) \
-                              # or isinstance(self.layer, tf.keras.layers.DepthwiseConv2D)
-                              # and self.quantize_weights:
     # quantize weights only applicable for Conv/FC layers.
-    # import pdb; pdb.set_trace()
     if  self.quantize_weights:
         if isinstance(self.layer, tf.keras.layers.DepthwiseConv2D):
             kernel_weights = getattr(self.layer, 'depthwise_kernel')

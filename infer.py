@@ -28,7 +28,9 @@ def load_normalized_test_case(test_image, pagelocked_buffer, preprocess_func):
     # Expected input dimensions
     C, H, W = (3, 224, 224)
     # Normalize the images, concatenate them and copy to pagelocked memory.
-    data = np.asarray([preprocess_func(PIL.Image.open(test_image).convert('RGB'), C, H, W)]).flatten()
+    nchw_image = np.asarray([preprocess_func(PIL.Image.open(test_image).convert('RGB'), C, H, W)])
+    nhwc_image = np.transpose(nchw_image, (0, 2, 3, 1))
+    data = nhwc_image.flatten()
     np.copyto(pagelocked_buffer, data)
 
 class HostDeviceMem(object):
@@ -72,15 +74,15 @@ def allocate_buffers(engine: trt.ICudaEngine, batch_size: int):
     return inputs, outputs, dbindings, stream
 
 def infer(engine_path, preprocess_func, batch_size, input_image, labels=[], verbose=False):
-    
+
     if verbose:
         logger = trt.Logger(trt.Logger.VERBOSE)
     else:
         logger = trt.Logger(trt.Logger.INFO)
-        
+
     with open(engine_path, 'rb') as f, trt.Runtime(logger) as runtime:
         engine = runtime.deserialize_cuda_engine(f.read())
-        
+
         def override_shape(shape, batch_size):
             return tuple([batch_size if dim==TRT_DYNAMIC_DIM else dim for dim in shape])
 
@@ -99,9 +101,9 @@ def infer(engine_path, preprocess_func, batch_size, input_image, labels=[], verb
                         shape = override_shape(shape, batch_size)
                     context.set_binding_shape(binding_idx, shape)
 
-            # Load the test images and preprocess them
+            # Load the test images and preprocess them. Pass the image in NHWC format
             load_normalized_test_case(input_image, inputs[0].host, preprocess_func)
-                
+
             # Transfer input data to the GPU.
             cuda.memcpy_htod(inputs[0].device, inputs[0].host)
             # Run inference.
@@ -114,7 +116,7 @@ def infer(engine_path, preprocess_func, batch_size, input_image, labels=[], verb
             top1_idx = np.argmax(softmax_output)
             output_class = labels[top1_idx+1]
             output_confidence = softmax_output[top1_idx]
-            
+
             print ("Output class of the image: {} Confidence: {}".format(output_class, output_confidence))
 
 if __name__ == '__main__':
@@ -130,7 +132,7 @@ if __name__ == '__main__':
     parser.add_argument('-v', '--verbose', action='store_true',
                         help="Flag to enable verbose loggin")
     args = parser.parse_args()
-    
+
     # Class 0 is not used and is treated as background class. Renaming it to "background"
     with open(args.labels, "r") as f:
         background_class = ["background"]
@@ -141,10 +143,9 @@ if __name__ == '__main__':
             imagenet_classes.append(class_name)
         all_classes = background_class + imagenet_classes
         labels = np.array(all_classes)
-        
+
     # Preprocessing for input images
     preprocess_func = image_processing.preprocess_resnet50
-    
+
     # Run inference on the test image
     infer(args.engine, preprocess_func, args.batch_size, args.image, labels, args.verbose)
-    
