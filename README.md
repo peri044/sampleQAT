@@ -161,13 +161,11 @@ usage: <python <filename>.py> [-h]
 
 These are the results we've seen in our initial experiments. Accuracy can differ based on your hyperparameters and number of epochs the model was trained for. When measuring accuracy in Tensorflow, the image decoding and processing utilities were using TF APIs, while `numpy` and `PIL` were used for image processing in TRT 8 accuracy calculation. This discrepancy might lead to numerical differences.
 
-```markdown
-|  Model/Framework | Accuracy |
-| ------------- | ------------- |
-| Resnet 50 (without QAT) in Tensorflow  | 76.47 %  |
-| Resnet 50 (with QAT) in Tensorflow  | 76.39 %  |
-|  Resnet 50 (with QAT) deployed using TensorRT 8  | 76.16 %  |
-```
+| Model/Framework                                | Accuracy |
+| ---------------------------------------------- | -------- |
+| Resnet 50 (without QAT) in Tensorflow          | 76.47 %  |
+| Resnet 50 (with QAT) in Tensorflow             | 76.39 %  |
+| Resnet 50 (with QAT) deployed using TensorRT 8 | 76.16 %  |
 
 On 2080 Ti using TensorRT, we observed a speedup of `2.37x` when comparing RN50 (without QAT, FP32 precision) with RN50 (with QAT, INT8 precision).
 
