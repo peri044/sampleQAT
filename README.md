@@ -111,7 +111,7 @@ Convert the saved model into ONNX by running
 python -m tf2onnx.convert --saved-model <path_to_saved_model> --output rn50_qat.onnx  --opset 13 --disable_constfold
 ```
 
-By default, tf2onnx uses TF's graph optimizers to performs constant folding after a saved model is loaded. `--disable_constfold` is necessary to disable constant folding of `QuantizeAndDequantize` nodes around weights of convolutional/fully connected layers. Note: the transpose node introduced due to `NHWC->NCHW` data format change is moved around in the graph after `QuantizeLinear` node due to the `TransposeOptimizer` in TF2ONNX.  You can checkout the ONNX graph for RN50 with QDQ nodes can be seen for reference.
+By default, tf2onnx uses TF's graph optimizers to performs constant folding after a saved model is loaded. `--disable_constfold` is necessary to disable constant folding of `QuantizeAndDequantize` nodes around weights of convolutional/fully connected layers. Note: the transpose node introduced due to `NHWC->NCHW` data format change is moved around in the graph after `QuantizeLinear` node due to the `TransposeOptimizer` in TF2ONNX.  You can checkout the ONNX graph for RN50 with QDQ nodes (`rn50_qat_graph.png`) can be seen for reference.
 
 Arguments:
 
@@ -156,6 +156,20 @@ To see the full list of available options and their descriptions, use the `-h` o
 ```
 usage: <python <filename>.py> [-h]
 ```
+
+## Results
+
+These are the results we've seen in our initial experiments. Accuracy can differ based on your hyperparameters and number of epochs the model was trained for. When measuring accuracy in Tensorflow, the image decoding and processing utilities were using TF APIs, while `numpy` and `PIL` were used for image processing in TRT 8 accuracy calculation. This discrepancy might lead to numerical differences.
+
+```markdown
+|  Model/Framework | Accuracy |
+| ------------- | ------------- |
+| Resnet 50 (without QAT) in Tensorflow  | 76.47 %  |
+| Resnet 50 (with QAT) in Tensorflow  | 76.39 %  |
+|  Resnet 50 (with QAT) deployed using TensorRT 8  | 76.16 %  |
+```
+
+On 2080 Ti using TensorRT, we observed a speedup of `2.37x` when comparing RN50 (without QAT, FP32 precision) with RN50 (with QAT, INT8 precision).
 
 # Additional resources
 
