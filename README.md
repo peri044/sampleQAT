@@ -13,7 +13,6 @@
   * [Step 5: TensorRT Inference](#step-5-tensorrt-inference)
 - [Additional resources](#additional-resources)
 - [Changelog](#changelog)
-- [Known issues](#known-issues)
 - [License](#license)
 
 
