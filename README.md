@@ -3,19 +3,16 @@
 **Table Of Contents**
 
 - [Description](#description)
-- [How does this sample work?](#how-does-this-sample-work)
-- [Prerequisites](#prerequisites)
+- [Prerequisites](#pre-requisites)
 - [Running the sample](#running-the-sample)
   * [Step 1: Quantization Aware Training](#step-1-quantization-aware-training)
-  * [Step 2: Export a RN50 QAT saved model](#step-2-export-a-rn50-qat-saved-model)
+    * [Step 2: Export a RN50 QAT saved model](#step-2-export-a-rn50-qat-saved-model)
   * [Step 3: Conversion to ONNX](#step-3-conversion-to-onnx)
-  * [Step 4: Conversion to TensorRT engine](#step-6-conversion-to-tensorrt-engine)
+  * [Step 4: Conversion to TensorRT engine](#step-4-conversion-to-tensorrt-engine)
   * [Step 5: TensorRT Inference](#step-5-tensorrt-inference)
 - [Additional resources](#additional-resources)
 - [Changelog](#changelog)
-- [Known issues](#known-issues)
 - [License](#license)
-
 
 
 ## Description
@@ -86,7 +83,7 @@ Download <a href="https://github.com/tensorflow/models/tree/v2.6.0/official/visi
 
 With these modifications, you can proceed with the finetuning of the model with QAT using the <a href="https://github.com/tensorflow/models/tree/v2.6.0/official/vision/image_classification/resnet#resnet-custom-training-loop">instructions provided </a>. The input image shape is in `NHWC` format (1, 224, 224, 3). The training data is passed in `NHWC` format as well.
 
-### Step 2 : Export a RN50 QAT saved model
+### Step 2: Export a RN50 QAT saved model
 
 Once you've finetuned the QAT model, export it by running
 
@@ -103,7 +100,7 @@ Arguments:
 * `--ckpt` : Path to finetuned QAT checkpoint to be loaded.
 * `--output` : Name of output TF saved model
 
-### Step 3 :  Conversion to ONNX
+### Step 3: Conversion to ONNX
 
 Convert the saved model into ONNX by running
 
@@ -120,7 +117,7 @@ Arguments:
 * `--opset` : ONNX opset version (opset 13 or higher must be used)
 * `--disable_constfold` : This flag disables constant folding performed by Tensorflow's grappler optimizer.
 
-### Step 4 : Conversion to TensorRT Engine
+### Step 4: Conversion to TensorRT Engine
 
 Convert the ONNX model into TRT and save the engine
 
