@@ -63,7 +63,7 @@ The workflow for this step is
 
 NVIDIA recommends to insert `QuantizeAndDequantize`  (QDQ) nodes before inputs and weights of weighted layers. Please take a look at this <a href="https://developer.nvidia.com/blog/achieving-fp32-accuracy-for-int8-inference-using-quantization-aware-training-with-tensorrt/"> blogpost</a>  for detailed recommendations.
 
-We provide automatic way to insert these QDQ nodes at the inputs of conv/FC, Maxpool layers and weights of conv/FC layers.  Please refer to`quantize.py` , `quantize_wrapper.py` and `quantizers.py`.
+We provide automatic way to insert these QDQ nodes at the inputs of conv/FC, Maxpool layers and weights of conv/FC layers.  Please refer to [`quantize.py`](quantize.py), [`quantize_wrapper.py`](quantize_wrapper.py) and [`quantizers.py`](quantizers.py).
 
 For this sample, we use <a href="https://github.com/tensorflow/models/tree/v2.6.0/official/vision/image_classification/resnet">Resnet50 from Tensorflow model garden codebase</a> for training. We use custom training loop implementation of this codebase to finetune our model using quantization nodes.
 
@@ -86,7 +86,7 @@ self.model = quantize_model(self.model)
 
 Download <a href="https://github.com/tensorflow/models/tree/v2.6.0/official/vision/image_classification/resnet#pretrained-models">pretrained checkpoint for RN50</a> and set `path_to_pretrained_ckpt` accordingly in the above snippet of `resnet_runnable.py` script.
 
-With these modifications, you can proceed with the finetuning of the model with QAT using the <a href="https://github.com/tensorflow/models/tree/v2.6.0/official/vision/image_classification/resnet#resnet-custom-training-loop">instructions provided </a>. The input image shape is in `NHWC` format (1, 224, 224, 3). The training data is passed in `NHWC` format as well.
+With these modifications, you can proceed with the finetuning of the model with QAT using the <a href="https://github.com/tensorflow/models/tree/v2.6.0/official/vision/image_classification/resnet#resnet-custom-training-loop">instructions provided in the TF model garden codebase</a>. The input image shape is in `NHWC` format (1, 224, 224, 3). The training data is passed in `NHWC` format as well.
 
 ### Step 2: Export a RN50 QAT saved model
 
@@ -96,7 +96,7 @@ Once you've finetuned the QAT model, export it by running
 python export_rn50_qat.py --ckpt <path_to_ckpt> --output <path_to_saved_model>
 ```
 
-This script applies quantization to the model, restores the checkpoint and exports it in a saved_model format. This script will generate `rn50_qat_saved_model`  which is a directory containing saved model. We set the overall graph data format to `NCHW` by using `tf.keras.backend.set_image_data_format('channels_first')`. TensorRT expects `NCHW` format for a graphs trained with QAT for better optimizations. Due to this, a transpose layer is introduced at the input of the graph for the RN50 model. The graph looks as follows
+This script applies quantization to the model, restores the checkpoint and exports it in a saved_model format. This script will generate `rn50_qat_saved_model`  which is a directory containing saved model. We set the overall graph data format to `NCHW` by using `tf.keras.backend.set_image_data_format('channels_first')`. TensorRT expects `NCHW` format for graphs trained with QAT for better optimizations. Due to this, a transpose layer is introduced at the input of the graph for the RN50 model. The graph looks as follows
 
 ![Alt text](qat_pb.png?raw=true "RN50 QAT graph in NCHW format")
 
@@ -113,7 +113,7 @@ Convert the saved model into ONNX by running
 python -m tf2onnx.convert --saved-model <path_to_saved_model> --output rn50_qat.onnx  --opset 13 --disable_constfold
 ```
 
-By default, tf2onnx uses TF's graph optimizers to performs constant folding after a saved model is loaded. `--disable_constfold` is necessary to disable constant folding of `QuantizeAndDequantize` nodes around weights of convolutional/fully connected layers. Note: the transpose node introduced due to `NHWC->NCHW` data format change is moved around in the graph after `QuantizeLinear` node due to the `TransposeOptimizer` in TF2ONNX.  You can checkout the ONNX graph for RN50 with QDQ nodes (`rn50_qat_graph.png`) can be seen for reference.
+By default, tf2onnx uses TF's graph optimizers to performs constant folding after a saved model is loaded. `--disable_constfold` is necessary to disable constant folding of `QuantizeAndDequantize` nodes around weights of convolutional/fully connected layers. Note: the transpose node introduced due to `NHWC->NCHW` data format change is moved around in the graph after `QuantizeLinear` node due to the `TransposeOptimizer` in TF2ONNX.  You can checkout the ONNX graph for RN50 with QDQ nodes ([`rn50_qat_graph.png`](rn50_qat_graph.png)) can be seen for reference.
 
 Arguments:
 
@@ -156,7 +156,7 @@ Arguments:
 To see the full list of available options and their descriptions, use the `-h` or `--help` command line option. For example:
 
 ```
-usage: <python <filename>.py> [-h]
+usage: python <filename>.py [-h]
 ```
 
 ## Results
@@ -199,7 +199,7 @@ The following resources provide a deeper understanding about Quantization aware 
 
 June 2020: Initial release of this sample based on TF 1.15 and TRT 7.1
 
-August 2021: Updated the sample based on TF 2.6 and TRT 8.0. TRT introduces dedicated layers and optimizations for quantization layers which are demonstrated in the inference.
+August 2021: Updated the sample based on TF 2.6 and TRT 8.0GA. TRT introduces dedicated layers and optimizations for quantization layers which are demonstrated in the inference.
 
 # License
 
