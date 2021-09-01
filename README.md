@@ -29,6 +29,11 @@ pip install -r requirements.txt
 ```
 
 * Install TF2ONNX from <a href="https://github.com/peri044/tensorflow-onnx/tree/qdq_changes">this branch</a>. This branch has the changes to ensure we remove redundant transpose nodes at weighted layers and disable constant folding to avoid pruning `QuantizeAndDequantize` nodes at weights of conv/FC layers. A pull request to upstream is in progress.
+```sh
+git clone -b qdq_changes --single-branch https://github.com/peri044/tensorflow-onnx.git
+cd tensorflow-onnx
+python setup.py install
+```
 
 * Clone the models from Tensorflow model garden.
 
