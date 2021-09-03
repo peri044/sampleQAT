@@ -132,8 +132,8 @@ Arguments:
 
 Convert the ONNX model into TRT and save the engine
 
-```
-python build_engine.py --onnx rn50_qat.onnx -v
+```sh
+python build_engine.py --onnx rn50_qat.onnx --engine rn50_qat_trt.engine -v
 ```
 
 Arguments:
@@ -146,8 +146,8 @@ Arguments:
 
 Command to run inference on a sample image
 
-```
-python infer.py --engine <input_trt_engine>
+```sh
+python infer.py --engine <input_trt_engine> --image <path_to_sample_image>
 ```
 
 Arguments:
