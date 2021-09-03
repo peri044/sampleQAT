@@ -87,7 +87,7 @@ self.model = quantize_model(self.model)
 ```
 > Note: `<path_to_pretrained_ckpt>` = directory where the pre-trained checkpoint was saved + filename root (i.e., `model.ckpt--0090`).
 
-  `quantize_model` walks through the graph, identifies `Conv` and `FC` layers  and inserts QDQ nodes around them. The `min_var` and `max_var` determine the dynamic range of a particular layer which is used to compute the scale factors used for INT8 conversion. This scale factor computation is performed internally in TF2ONNX when the QAT finetuned model is converted to ONNX.
+`quantize_model` walks through the graph, identifies `Conv` and `FC` layers  and inserts QDQ nodes around them. The `min_var` and `max_var` determine the dynamic range of a particular layer which is used to compute the scale factors used for INT8 conversion. This scale factor computation is performed internally in TF2ONNX when the QAT finetuned model is converted to ONNX.
 
 Download <a href="https://github.com/tensorflow/models/tree/v2.6.0/official/vision/image_classification/resnet#pretrained-models">pretrained checkpoint for RN50</a> and set `path_to_pretrained_ckpt` accordingly in the above snippet of `resnet_runnable.py` script.
 
@@ -98,7 +98,7 @@ With these modifications, you can proceed with the finetuning of the model with 
 
 Once you've finetuned the QAT model, export it by running
 
-```python
+```sh
 python export_rn50_qat.py --ckpt <path_to_ckpt> --output <path_to_saved_model>
 ```
 
@@ -109,13 +109,13 @@ This script applies quantization to the model, restores the checkpoint and expor
 Arguments:
 
 * `--ckpt` : Path to finetuned QAT checkpoint to be loaded.
-* `--output` : Name of output TF saved model
+* `--output` : Name of output TF saved model (directory).
 
 ### Step 3: Conversion to ONNX
 
 Convert the saved model into ONNX by running
 
-```python
+```sh
 python -m tf2onnx.convert --saved-model <path_to_saved_model> --output rn50_qat.onnx  --opset 13 --disable_constfold
 ```
 
