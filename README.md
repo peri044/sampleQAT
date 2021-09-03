@@ -6,7 +6,7 @@
 - [Prerequisites](#pre-requisites)
 - [Running the sample](#running-the-sample)
   * [Step 1: Quantization Aware Training](#step-1-quantization-aware-training)
-    * [Step 2: Export a RN50 QAT saved model](#step-2-export-a-rn50-qat-saved-model)
+  * [Step 2: Export a RN50 QAT saved model](#step-2-export-a-rn50-qat-saved-model)
   * [Step 3: Conversion to ONNX](#step-3-conversion-to-onnx)
   * [Step 4: Conversion to TensorRT engine](#step-4-conversion-to-tensorrt-engine)
   * [Step 5: TensorRT Inference](#step-5-tensorrt-inference)
@@ -22,9 +22,12 @@ This sample demonstrates workflow for training and inference of Resnet-50 model 
 ## Pre-requisites
 
 * TensorRT 8.0.1.6, CUDA-11.2, CUDNN 8.2.1
-* Install the necessary requirements
+* Clone the sample, setup `PYTHONPATH` accordingly, and install the necessary requirements.
 
-```
+```sh
+git clone https://github.com/NVIDIA/sampleQAT.git
+cd sampleQAT
+export PYTHONPATH=$PWD:$PYTHONPATH
 pip install -r requirements.txt
 ```
 
@@ -41,6 +44,7 @@ python setup.py install
 git clone https://github.com/tensorflow/models.git
 pushd models && git checkout tags/v2.6.0 && popd
 export PYTHONPATH=$PWD/models:$PYTHONPATH
+pip install -r models/official/requirements.txt
 ```
 
 ## Running the sample
