@@ -85,6 +85,7 @@ self.model.load_weights(<path_to_pretrained_ckpt>)
 from quantize import quantize_model
 self.model = quantize_model(self.model)
 ```
+> Note: `<path_to_pretrained_ckpt>` = directory where the pre-trained checkpoint was saved + filename root (i.e., `model.ckpt--0090`).
 
   `quantize_model` walks through the graph, identifies `Conv` and `FC` layers  and inserts QDQ nodes around them. The `min_var` and `max_var` determine the dynamic range of a particular layer which is used to compute the scale factors used for INT8 conversion. This scale factor computation is performed internally in TF2ONNX when the QAT finetuned model is converted to ONNX.
 
