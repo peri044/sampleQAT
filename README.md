@@ -92,6 +92,7 @@ self.model = quantize_model(self.model)
 Download <a href="https://github.com/tensorflow/models/tree/v2.6.0/official/vision/image_classification/resnet#pretrained-models">pretrained checkpoint for RN50</a> and set `path_to_pretrained_ckpt` accordingly in the above snippet of `resnet_runnable.py` script.
 
 With these modifications, you can proceed with the finetuning of the model with QAT using the <a href="https://github.com/tensorflow/models/tree/v2.6.0/official/vision/image_classification/resnet#resnet-custom-training-loop">instructions provided in the TF model garden codebase</a>. The input image shape is in `NHWC` format (1, 224, 224, 3). The training data is passed in `NHWC` format as well.
+> Example: `python resnet_ctl_imagenet_main.py --model_dir=<checkpoints_finetuned_save_dir> --num_gpus=1 --batch_size=128 --train_epochs=1 --train_steps=10 --use_synthetic_data=false --data_dir=<dir_to_imagenet_train_val_tfrecord> --skip_eval --enable_checkpoint_and_export`
 
 ### Step 2: Export a RN50 QAT saved model
 
