@@ -49,14 +49,6 @@ pip install -r models/official/requirements.txt
 
 ## Running the sample
 
-Clone the sample and setup `PYTHONPATH` accordingly.
-
-```sh
-git clone https://github.com/NVIDIA/sampleQAT.git
-cd sampleQAT
-export PYTHONPATH=$PWD:$PYTHONPATH
-```
-
 ### Step 1: Quantization Aware Training
 
 The workflow for this step is
